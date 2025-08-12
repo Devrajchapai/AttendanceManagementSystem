@@ -17,8 +17,56 @@ const user = mongoose.Schema({
         require: true,
     },
 
-    role: ['admin', 'teacher', 'student'],
+    role:{
+        type: String,
+        enum: ['admin', 'teacher', 'student']
+    },
 
+    rollNo: Number,
+
+    studentId:{
+        type: Number,
+        unique: true
+    },
+
+    mobileNo:{
+        type: Number,
+    },
+
+    gender:{
+        type: String,
+        enum: ['male', 'female'],
+    },
+
+    nationality: String,
+
+    DOB: Date,
+
+    status:{
+        type: String,
+        enum: ['disable', 'pending', 'active'],
+    }, 
+    
+
+    guardianName: String,
+
+    fatherName: String,
+
+    fatherNumber: Number,
+
+    motherName: String,
+
+    motherNumber: Number,
+
+    Program: String,
+
+    admittedBatch: Number,
+
+    currentClass: String,
+
+    assignedSubjects: [String],
+    
+    attendance: [Date]
 
 })
 
