@@ -1,12 +1,9 @@
 require('dotenv').config()
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const bcryptjs = require('bcryptjs');
-
-const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 const userModel = require('../user/user.model')
 
-const app = express();
 
 class AuthController{
 
@@ -14,7 +11,7 @@ class AuthController{
 
         const {email, password, role} = req.body;
         try{
-            const hashPassword = await bcryptjs.hash(password, 10)
+            const hashPassword = await bcrypt.hash(password, 10)
                 
             const user =  new userModel({
                 email,
@@ -43,20 +40,45 @@ class AuthController{
         if(!user){
             return res.status(422).send({error: "must provide email or password or role 2"});
         }
-
+1       
         try{
-            bcryptjs.compare(password, user.password)
-            const token = await jwt.sign({userId: user._id}, process.env.JWT_PRIVATE_KEY)
-            res.send({token})
-        }catch(err){
-            return res.status(422).send({error: "must provide email or password or role 3"})
-        }
+            const checkPassword = await bcrypt.compare(password, user.password)
+            if(checkPassword){
+                const token = await jwt.sign({userId: user._id}, process.env.JWT_PRIVATE_KEY)
+                return res.status(200).send(token)
 
+            }else{
+                console.log("Wrong Password")
+                res.status(300).send("must provide correct information")
+            }
+
+        }catch(err){
+            res.status(402).send(`must provide email, password and role 3`)
+        }
     }
 
-    passwordChange = (req, res) => {
+     passwordChange = async (req, res) => {
         const {newPassword} = req.body
-        userModel({password: this.passwordChange})
+        const {token, email} = req.headers
+
+        if(!token){
+            res.status(403).send("Must be logged in to change password")
+        }
+
+        try{
+            const newHashPassword = await bcrypt.hash(newPassword, 10)
+            const user = userModel.findOne({email})
+            const response = await user.updateOne({password: newHashPassword})
+            if(response){
+                res.status(200).send(`your password is changed`);
+            }else{
+                res.send("didn't change")
+            }
+
+        }catch(err){
+            res.status(402).send(`something went wrong, try again in a while`)
+            console.log(err)
+        }
     }
 
 }

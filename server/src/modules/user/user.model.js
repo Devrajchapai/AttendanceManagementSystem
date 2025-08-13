@@ -66,7 +66,17 @@ const user = mongoose.Schema({
 
     assignedSubjects: [String],
     
-    attendance: [Date]
+    attendance: [{
+        key:{
+            type: Date,
+        },
+        value:{
+            type: String,
+            enum: ["present", "absent"],
+            default: "absent",
+        },
+    }],
+    
 
 })
 
