@@ -7,7 +7,7 @@ const app = express();
 
 const PORT =  process.env.EXPRESS_PORT;
 
-require('./src/modules/user/user.model')
+require('./src/modules/user/student.model')
 
 app.use(express.json())
 app.use(mainRouter)

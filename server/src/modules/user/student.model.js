@@ -1,6 +1,11 @@
 const mongoose =  require('mongoose')
 
-const user = mongoose.Schema({
+const student = mongoose.Schema({
+    profile: {
+        data: Buffer,
+        contentType: String,
+    },
+    
     username:{
         type: String,
         require: true,
@@ -19,14 +24,14 @@ const user = mongoose.Schema({
 
     role:{
         type: String,
-        enum: ['admin', 'teacher', 'student']
+        default: 'student'
     },
 
     rollNo: Number,
 
     studentId:{
         type: Number,
-        unique: true
+        //unique: true
     },
 
     mobileNo:{
@@ -80,5 +85,5 @@ const user = mongoose.Schema({
 
 })
 
-const userModel = mongoose.model('User', user);
-module.exports = userModel
+const studentModel = mongoose.model('Student', student);
+module.exports = studentModel
