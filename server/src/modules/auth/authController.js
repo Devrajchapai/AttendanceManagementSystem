@@ -59,6 +59,8 @@ class AuthController{
             return res.status(422).send({error: "must provide email or password or role"});
         }
 
+
+
         if(role == 'student'){
             var user = await studentModel.findOne({email})
         }else if(role === 'teacher'){
@@ -70,7 +72,7 @@ class AuthController{
         }
         
         if(!user){
-            return res.status(422).send({error: "must provide email or password or role"});
+            return res.status(422).send({error: "user doesn't exit"});
         }
 1       
         try{

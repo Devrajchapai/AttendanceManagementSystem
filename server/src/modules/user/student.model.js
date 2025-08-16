@@ -28,13 +28,15 @@ const student = mongoose.Schema({
     },
 
     rollNo: Number,
+    
+    symbolNo: Number,
 
     studentId:{
         type: Number,
-        //unique: true
+        unique: true
     },
 
-    mobileNo:{
+    phone:{
         type: Number,
     },
 
@@ -57,11 +59,11 @@ const student = mongoose.Schema({
 
     fatherName: String,
 
-    fatherNumber: Number,
+    fatherPhone: Number,
 
     motherName: String,
 
-    motherNumber: Number,
+    motherPhone: Number,
 
     Program: String,
 
