@@ -32,7 +32,7 @@ const student = mongoose.Schema({
     symbolNo: Number,
 
     studentId:{
-        type: Number,
+        type: String,
         unique: true
     },
 
@@ -47,7 +47,7 @@ const student = mongoose.Schema({
 
     nationality: String,
 
-    DOB: Date,
+    DOB: String,
 
     status:{
         type: String,
@@ -65,7 +65,7 @@ const student = mongoose.Schema({
 
     motherPhone: Number,
 
-    Program: String,
+    program: String,
 
     admittedBatch: Number,
 
@@ -80,7 +80,6 @@ const student = mongoose.Schema({
         value:{
             type: String,
             enum: ["present", "absent"],
-            default: "absent",
         },
     }],
     

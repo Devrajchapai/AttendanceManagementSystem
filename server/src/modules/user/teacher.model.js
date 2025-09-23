@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 
 const teacher = mongoose.Schema({
+
     username: {
         type: String,
         require: true,
@@ -22,13 +23,22 @@ const teacher = mongoose.Schema({
     },
 
     teacherId:{
-        type: Number,
+        type: String,
+        unique: true,
     },
 
-    profile: {
-        data: Buffer,
-        contentType: String,
+    status:{
+        type: String,
+        enum: ['inactive', 'active', 'on leave']
     },
+
+    mobileNumber: String,
+    department: String,
+
+    assignedSubjects: [String]
+
+
+    
 })
 
 const teacherModel = mongoose.model('Teacher', teacher)

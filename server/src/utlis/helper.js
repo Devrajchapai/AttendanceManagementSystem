@@ -1,7 +1,7 @@
 
 const generateRandomString = (length) =>{
 
-    const char = qwertyuioplkjhgfdsazxcvbnm1234567890QWERTYUIOPLKJHGFDSAZXCVBNM
+    const char = 'qwertyuioplkjhgfdsazxcvbnm1234567890QWERTYUIOPLKJHGFDSAZXCVBNM'
     const len = char.length
     let random = ''
     for(i=0; i<length; i++){

@@ -1,32 +1,86 @@
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
+
+const classSchema = mongoose.Schema({
+    subject: {
+        type: String,
+        required: true
+    },
+    startTime: {
+        type: String,
+        required: true
+    },
+    endTime: {
+        type: String,
+        required: true
+    },
+
+    classStatus: {
+      type: String, 
+      enum: ['regular', 'cancled', 'exchanged'],
+      require: true,
+      default: 'regular'
+    }
+});
+
+const dayRoutineSchema = mongoose.Schema({
+    dayOfWeek: {
+        type: String,
+        required: true,
+        enum: ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+    },
+    collegeStatus :{
+      type: String,
+      enum: ["open", "closed"],
+      require: true
+    },
+    classes: {
+        type: [classSchema],
+    }
+});
+
 
 const admin = mongoose.Schema({
-    username: {
-        type: String,
-        default: "admin",
-    },
+  username: {
+    type: String,
+    default: "admin",
+  },
 
-    email:{
-        type: String,
-        require: true,
-        unique: true,
-    },
+  email: {
+    type: String,
+    require: true,
+    unique: true,
+  },
 
-    password: {
-        type: String,
-        require: true,
-    },
+  password: {
+    type: String,
+    require: true,
+  },
 
-     role:{
-        type: String,
-        default: 'admin'
-    },
+  role: {
+    type: String,
+    default: "admin",
+  },
 
-    profile: {
-        data: Buffer,
-        contentType: String,
-    },
-})
+  profile: {
+    data: Buffer,
+    contentType: String,
+  },
 
-const adminModel = mongoose.model('Admin', admin)
-module.exports = adminModel
+  previousAdmins: [String],
+
+  routine: [dayRoutineSchema],
+
+  availableCourses : [{
+    type: String,
+    unique: true
+  }],
+
+  courseAssignToTeacher: [{
+    course: String,
+    assignedTeacher: String
+  }]
+
+});
+
+const adminModel = mongoose.model("Admin", admin);
+module.exports = adminModel;
