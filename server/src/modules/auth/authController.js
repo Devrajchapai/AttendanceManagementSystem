@@ -19,6 +19,9 @@ class AuthController {
 
         if (role == 'student') {
             var user = await studentModel.findOne({ email })
+            if(user.status === 'pending'){
+                res.status(403).send(`your account status is pending !!! contact your adminstration to active your account`)
+            }
         } else if (role === 'teacher') {
             var user = await teacherModel.findOne({ email })
         } else if (role === 'admin') {

@@ -2,7 +2,6 @@ require("dotenv").config();
 const adminModel = require("../user/admin.model");
 const teacherModel = require("../user/teacher.model");
 const studentModel = require("../user/student.model");
-const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -74,33 +73,6 @@ class AdminController {
       res.status(400).send(`something went wrong`);
     }
   };
-
-  //asign course to teacher
-  assignCourseToTecher = async (req, res) => {
-    const { userId } = req.params
-    const { assignCourse } = req.body;
-
-    try {
-      const response = await teacherModel.findOneAndUpdate(
-        { _id: userId },
-        { $addToSet: { assignedSubjects: assignCourse } },
-        { new: true, runValidators: true }
-      );
-
-      if (!response) {
-        res.status(400).json({ message: `failed to update` });
-      }
-
-      res.status(200).send(`course update sucessfully`);
-    } catch (err) {
-      console.log(err);
-      res.status(400).send(`something went wrong`);
-    }
-  };
-
-  removeCourseFromTeacher = async(req, res) =>{
-
-  }
 
   //retriving list of users
   retriveTeachers = async (req, res) => {
@@ -213,8 +185,64 @@ class AdminController {
     }
   };
 
+
+  // retrieve student account base on status
+  pendingStatus = async(req, res) =>{
+    try{  
+      const response = await studentModel.find({status: "pending"}, {username: 1, status: 1}, {new: true}, {sort:{username: 1}})
+      if(!response){
+        res.status(400).send(`failed to retrieve pending accounts`)
+      }
+
+      res.status(200).json({
+        message: 'retrieve pending accounts',
+        data: response
+      })
+    }catch(err){
+      console.log(err)
+      res.status(400).send(`something went wrong`)
+    }
+  }
+
+  activeStatus = async(req, res)=>{
+    try{
+      const response = await studentModel.find({status: 'active'}, {username: 1, status: 1}, {new: true}, {sort:{username: 1}})
+       if(!response){
+        res.status(400).send(`failed to retrieve pending accounts`)
+      }
+
+      res.status(200).json({
+        message: 'retrieve active accounts',
+        data: response
+      })
+    }catch(err){
+       console.log(err)
+      res.status(400).send(`something went wrong`)
+    }
+  }
+
+  disableStatus = async(req, res)=>{
+    try{
+      const response = await studentModel.find({status: 'disable'}, {username: 1, status: 1}, {new: true}, {sort:{username: 1}})
+       if(!response){
+        res.status(400).send(`failed to retrieve pending accounts`)
+      }
+
+      res.status(200).json({
+        message: 'retrieve disable accounts',
+        data: response
+      })
+    }catch(err){
+       console.log(err)
+      res.status(400).send(`something went wrong`)
+    }
+  }
+
+
+
   //---------------------------------------------TEACHER----------------------------------------------------------------------------------------------
 
+  // create, update and view teacher
   registerTeacher = async (req, res) => {
     const { username, email, password, role } = req.body;
     if (!username || !email || !password || !role) {
@@ -301,8 +329,54 @@ class AdminController {
     }
   };
 
+  //asign course to teacher
+  assignCourseToTecher = async (req, res) => {
+    const { userId } = req.params;
+    const { assignCourse } = req.body;
+
+    try {
+      const response = await teacherModel.findOneAndUpdate(
+        { _id: userId },
+        { $addToSet: { assignedSubjects: assignCourse } },
+        { new: true, runValidators: true }
+      );
+
+      if (!response) {
+        res.status(400).json({ message: `failed to update` });
+      }
+
+      res.status(200).send(`course update sucessfully`);
+    } catch (err) {
+      console.log(err);
+      res.status(400).send(`something went wrong`);
+    }
+  };
+
+  removeCourseFromTeacher = async (req, res) => {
+    const { userId } = req.params;
+    const { removedCourse } = req.body;
+
+    try {
+      const response = await teacherModel.findOneAndUpdate(
+        { _id: userId },
+        { $pullAll: { assignedSubjects: removedCourse } },
+        { new: true, runValidators: true }
+      );
+
+      if (!response) {
+        res.status(400).send(`failed to remove ${removedCourse}`);
+      }
+
+      res.status(200).send(`${removedCourse} removed sucessfully`);
+    } catch (err) {
+      console.log(err);
+      res.status(400).send(`something went wrong`);
+    }
+  };
+
   //--------------------------------------------------------------------STUDENT -----------------------------------------------------------------------------------------------------------------------------
 
+  // create, update and view student
   registerStudent = async (req, res) => {
     const { username, email, password, role } = req.body;
     if (!username || !email || !password || !role) {
@@ -406,6 +480,74 @@ class AdminController {
         data: student,
       });
     } catch (err) {}
+  };
+
+  // assign courses to student
+  assignCourseToStudent = async (req, res) => {
+    const { userId } = req.params;
+    const { subjects } = req.body;
+    try {
+      const response = await studentModel.findOneAndUpdate(
+        { _id: userId },
+        { $addToSet: { assignedSubjects: subjects } },
+        { new: true, runValidators: true }
+      );
+
+      if (!response) {
+        res.status(400).send(`failed to add ${subjects}`);
+      }
+
+      res.status(200).send(`${subjects} added sucessfully`);
+    } catch (err) {
+      console.log(err);
+      res.status(400).send(`something went wrong`);
+    }
+  };
+
+  removeCourseFromStudent = async (req, res) => {
+    const { userId } = req.params;
+    const { subjects } = req.body;
+
+    try {
+      const response = await studentModel.findByIdAndUpdate(
+        { _id: userId },
+        { $pullAll: { assignedSubjects: subjects } },
+        { new: true, runValidators: true }
+      );
+      if (!response) {
+        res.status(400).send(`failed to remove ${subjects}`);
+      }
+
+      res.status(200).send(`${subjects} removed sucessfully`);
+    } catch (err) {
+      console.log(err);
+      res.status(400).send(`something went wrong`);
+    }
+  };
+
+
+
+  // update student status
+  updateStudentStatus = async (req, res) => {
+    const { userId } = req.params;
+    const { updatedStatus } = req.body;
+
+    try {
+      const response = await studentModel.findByIdAndUpdate(
+        { _id: userId },
+        { $set: { status: updatedStatus } },
+        { new: true, runValidators: true }
+      );
+
+      if(!response){
+        res.status(400).send(`failed to change status`)
+      }
+
+      res.status(200).send(`status changed to ${updatedStatus}`)
+    } catch (err) {
+      console.log(err);
+      res.status(400).send(`something went wrong`);
+    }
   };
 }
 const adminController = new AdminController();

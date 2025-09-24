@@ -33,12 +33,12 @@ const teacher = mongoose.Schema({
     },
 
     mobileNumber: String,
+
     department: String,
 
     assignedSubjects: [String]
 
-
-    
+  
 })
 
 const teacherModel = mongoose.model('Teacher', teacher)

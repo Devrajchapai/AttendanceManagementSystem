@@ -12,10 +12,6 @@ mainRouter.get('/retriveTeachers', requireToken, adminController.retriveTeachers
 mainRouter.get('/retriveStudents', requireToken, adminController.retriveStudents)
 
 
-//assigning and removing courses
-mainRouter.post('/assignCourseToTecher/:userId', requireToken, adminController.assignCourseToTecher)
-mainRouter.delete('/removeCourseFromTeacher/:userId', requireToken, adminController.removeCourseFromTeacher)
-
 
 //update and view class routine
 mainRouter.post('/updateSemesterRoutine', requireToken, adminController.updateSemesterRoutine)
@@ -24,12 +20,14 @@ mainRouter.get('/todaysRoutine',requireToken, adminController.todaysRoutine)
 
 
 //Courses
-mainRouter.post('/updateCourses', requireToken, adminController.updateCourses)
+mainRouter.patch('/updateCourses', requireToken, adminController.updateCourses)
 mainRouter.get('/viewCourses', requireToken, adminController.viewCourses)
 mainRouter.delete('/deleteCourses', requireToken, adminController.deleteCourses)
 
-
-
+// student account status
+mainRouter.get('/pendingStatus', requireToken, adminController.pendingStatus)
+mainRouter.get('/activeStatus', requireToken, adminController.activeStatus)
+mainRouter.get('/disableStatus', requireToken, adminController.disableStatus)
 
 
 //--------------------------------------------Teacher Routes-------------------------------------------------------------------------
@@ -39,11 +37,28 @@ mainRouter.get('/viewTeacherProfile/:userId', requireToken, adminController.view
 
 
 
+//assigning and removing courses
+mainRouter.patch('/assignCourseToTecher/:userId', requireToken, adminController.assignCourseToTecher)
+mainRouter.delete('/removeCourseFromTeacher/:userId', requireToken, adminController.removeCourseFromTeacher)
+
 
 
 //------------------------------------------------Student Routes---------------------------------------------------------------------
 mainRouter.post('/registerStudent', requireToken, adminController.registerStudent)
 mainRouter.put('/updateStudentProfile/:userId',requireToken, adminController.updateStudentProfile)
 mainRouter.get('/viewStudentProfile/:userId', requireToken, adminController.viewStudentProfile)
+
+
+
+//assign and remove courses
+mainRouter.patch('/assignCourseToStudent/:userId', requireToken, adminController.assignCourseToStudent)
+mainRouter.delete('/removeCourseFromStudent/:userId', requireToken, adminController.removeCourseFromStudent)
+
+
+
+// update student status
+mainRouter.patch('/updateStudentStatus/:userId', requireToken, adminController.updateStudentStatus)
+
+
 
 module.exports = mainRouter

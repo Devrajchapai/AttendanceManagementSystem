@@ -1,11 +1,8 @@
-const mongoose =  require('mongoose')
+const mongoose =  require('mongoose');
+const { type } = require('os');
 
 const student = mongoose.Schema({
-    profile: {
-        data: Buffer,
-        contentType: String,
-    },
-    
+ 
     username:{
         type: String,
         require: true,
@@ -74,15 +71,24 @@ const student = mongoose.Schema({
     assignedSubjects: [String],
     
     attendance: [{
-        key:{
+        date:{
             type: Date,
         },
-        value:{
+        status:{
             type: String,
             enum: ["present", "absent"],
         },
     }],
-    
+
+    workingDays: {
+        type: Number,
+        default: 0,
+    },
+
+    presentDays: {
+        type: Number,
+        default: 0,
+    },
 
 })
 
