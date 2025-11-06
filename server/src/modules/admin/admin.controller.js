@@ -1,12 +1,63 @@
-require("dotenv").config();
 const adminModel = require("../user/admin.model");
 const teacherModel = require("../user/teacher.model");
 const studentModel = require("../user/student.model");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+const nameOfweek = require('../../utlis/nameofweek')
+const {hour, minutes, second} = require('../../utlis/millisecondToHour')
+const hourToMillisecond = require('../../utlis/hourToMillisecond')
+const currentTime = require('../../utlis/currentTime')
 
 class AdminController {
-  //-------------------------------------------------ADMIN---------------------------------------------------------------------------
+  //------------------------------------------------- ADMIN ---------------------------------------------------------------------------
+
+  // college location
+  updateCollegeLocation = async (req, res) => {
+    const { latitude, longitude, range } = req.body;
+    const { _id } = req.user;
+
+    try {
+      const response = await adminModel.findByIdAndUpdate(
+        { _id: _id },
+        {
+          $set: {
+            collegeLocation: {
+              latitude,
+              longitude,
+              range,
+            },
+          },
+        },
+        { new: true, runValidators: true }
+      );
+      if (!response) {
+        res.status(400).send(`failed to update college location`);
+      }
+
+      res.status(200).send(`location is updated sucessfully`+ response.collegeLocation);
+    } catch (err) {
+      console.log(err);
+      res.status(`something went wrong`);
+    }
+  };
+
+  viewCollegeLocation = async (req, res) => {
+    const {_id} = req.user
+    try{
+      const response = await adminModel.findById({_id}, {collegeLocation: 1}, {new: true, runValidators: true})
+      if(!response){
+        res.status(400).send(`failed to retrive location`)
+      }
+
+      res.status(200).json({
+        message: `retriving location`,
+        data: response
+      })
+    }catch(err){
+      console.log(err)
+      res.status(400).send(`something went wrong`)
+    }
+  }
+
 
   //add and view courses
   updateCourses = async (req, res) => {
@@ -119,7 +170,7 @@ class AdminController {
     }
   };
 
-  //Routing for page
+  //Routine for page
   updateSemesterRoutine = async (req, res) => {
     const { _id } = req.user;
     const { routine } = req.body;
@@ -139,42 +190,13 @@ class AdminController {
   };
 
   todaysRoutine = async (req, res) => {
-    const nameOfweek = () => {
-      const date = new Date();
-      const todayInNum = date.getDay();
-
-      switch (todayInNum) {
-        case 0:
-          return "sunday";
-
-        case 1:
-          return "monday";
-
-        case 2:
-          return "tuesday";
-
-        case 3:
-          return "wednesday";
-
-        case 4:
-          return "thursday";
-
-        case 5:
-          return "friday";
-
-        case 6:
-          return "saturday";
-      }
-    };
-
-    try {
+    try{
       const today = nameOfweek();
 
-      const admin = await adminModel.findOne({ username: "admin" });
+      const admin = await adminModel.findOne({ "username": "admin" });
       const todaysClasses = admin.routine.find(
         (day) => day.dayOfWeek === today
       );
-
       res.status(200).json({
         message: "updating today's routine ",
         data: todaysClasses,
@@ -185,60 +207,94 @@ class AdminController {
     }
   };
 
-
-  // retrieve student account base on status
-  pendingStatus = async(req, res) =>{
-    try{  
-      const response = await studentModel.find({status: "pending"}, {username: 1, status: 1}, {new: true}, {sort:{username: 1}})
+  viewRoutine = async (req, res) =>{
+    const {_id} = req.user
+    const date = new Date()
+    const Ctime = currentTime()
+    try{
+      const response = await adminModel.findById({_id}, {routine : 1 })
       if(!response){
-        res.status(400).send(`failed to retrieve pending accounts`)
+        res.status(400).send(`failed to retrieve routine`)
       }
 
       res.status(200).json({
-        message: 'retrieve pending accounts',
-        data: response
+        message: 'retrieving routine',
+        data: response,
+       
       })
     }catch(err){
       console.log(err)
       res.status(400).send(`something went wrong`)
     }
-  }
 
-  activeStatus = async(req, res)=>{
-    try{
-      const response = await studentModel.find({status: 'active'}, {username: 1, status: 1}, {new: true}, {sort:{username: 1}})
-       if(!response){
-        res.status(400).send(`failed to retrieve pending accounts`)
+
+  }
+  // retrieve student account base on status
+  pendingStatus = async (req, res) => {
+    try {
+      const response = await studentModel.find(
+        { status: "pending" },
+        { username: 1, status: 1 },
+        { new: true },
+        { sort: { username: 1 } }
+      );
+      if (!response) {
+        res.status(400).send(`failed to retrieve pending accounts`);
       }
 
       res.status(200).json({
-        message: 'retrieve active accounts',
-        data: response
-      })
-    }catch(err){
-       console.log(err)
-      res.status(400).send(`something went wrong`)
+        message: "retrieve pending accounts",
+        data: response,
+      });
+    } catch (err) {
+      console.log(err);
+      res.status(400).send(`something went wrong`);
     }
-  }
+  };
 
-  disableStatus = async(req, res)=>{
-    try{
-      const response = await studentModel.find({status: 'disable'}, {username: 1, status: 1}, {new: true}, {sort:{username: 1}})
-       if(!response){
-        res.status(400).send(`failed to retrieve pending accounts`)
+  activeStatus = async (req, res) => {
+    try {
+      const response = await studentModel.find(
+        { status: "active" },
+        { username: 1, status: 1 },
+        { new: true },
+        { sort: { username: 1 } }
+      );
+      if (!response) {
+        res.status(400).send(`failed to retrieve pending accounts`);
       }
 
       res.status(200).json({
-        message: 'retrieve disable accounts',
-        data: response
-      })
-    }catch(err){
-       console.log(err)
-      res.status(400).send(`something went wrong`)
+        message: "retrieve active accounts",
+        data: response,
+      });
+    } catch (err) {
+      console.log(err);
+      res.status(400).send(`something went wrong`);
     }
-  }
+  };
 
+  disableStatus = async (req, res) => {
+    try {
+      const response = await studentModel.find(
+        { status: "disable" },
+        { username: 1, status: 1 },
+        { new: true },
+        { sort: { username: 1 } }
+      );
+      if (!response) {
+        res.status(400).send(`failed to retrieve pending accounts`);
+      }
 
+      res.status(200).json({
+        message: "retrieve disable accounts",
+        data: response,
+      });
+    } catch (err) {
+      console.log(err);
+      res.status(400).send(`something went wrong`);
+    }
+  };
 
   //---------------------------------------------TEACHER----------------------------------------------------------------------------------------------
 
@@ -525,8 +581,6 @@ class AdminController {
     }
   };
 
-
-
   // update student status
   updateStudentStatus = async (req, res) => {
     const { userId } = req.params;
@@ -539,11 +593,11 @@ class AdminController {
         { new: true, runValidators: true }
       );
 
-      if(!response){
-        res.status(400).send(`failed to change status`)
+      if (!response) {
+        res.status(400).send(`failed to change status`);
       }
 
-      res.status(200).send(`status changed to ${updatedStatus}`)
+      res.status(200).send(`status changed to ${updatedStatus}`);
     } catch (err) {
       console.log(err);
       res.status(400).send(`something went wrong`);

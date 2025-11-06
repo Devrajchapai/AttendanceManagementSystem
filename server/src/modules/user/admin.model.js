@@ -78,8 +78,14 @@ const admin = mongoose.Schema({
   courseAssignToTeacher: [{
     course: String,
     assignedTeacher: String
-  }]
+  }],
 
+  collegeLocation: {
+    latitude : Number,
+    longitude: Number,
+    range: Number,
+  },
+  
 });
 
 const adminModel = mongoose.model("Admin", admin);

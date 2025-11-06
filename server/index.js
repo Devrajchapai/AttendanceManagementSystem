@@ -1,9 +1,11 @@
 require('dotenv').config()
 const express = require('express');
 require('./src/config/config.mongoose')
+require('./src/modules/background/background.router')
 const mainRouter = require('./src/config/config.routes')
 const requireToken = require('./src/middleware/requireToken')
 const app = express();
+
 
 const PORT =  process.env.EXPRESS_PORT;
 
@@ -17,9 +19,7 @@ app.use('/public', express.static('public'))
 app.use(mainRouter)
 
 
-app.get('/', requireToken, (req, res)=>{
-    res.send("You are logged in 🫂 🫂 🫂")
-})
+
 app.listen(PORT, ()=>{
     console.log(`Server is running on PORT: ${PORT} 😻😻😻`);
 })

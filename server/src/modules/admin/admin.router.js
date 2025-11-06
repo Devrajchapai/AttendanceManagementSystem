@@ -7,6 +7,12 @@ const requireToken = require('../../middleware/requireToken')
 const adminController = require('./admin.controller')
 
 //---------------------------------------------Admin Routes----------------------------------------------------------------------------
+
+// college location
+mainRouter.post('/updateCollegeLocation', requireToken, adminController.updateCollegeLocation)
+mainRouter.get('/viewCollegeLocation', requireToken, adminController.viewCollegeLocation)
+
+
 //retrive teacher and student info
 mainRouter.get('/retriveTeachers', requireToken, adminController.retriveTeachers)
 mainRouter.get('/retriveStudents', requireToken, adminController.retriveStudents)
@@ -16,13 +22,14 @@ mainRouter.get('/retriveStudents', requireToken, adminController.retriveStudents
 //update and view class routine
 mainRouter.post('/updateSemesterRoutine', requireToken, adminController.updateSemesterRoutine)
 mainRouter.get('/todaysRoutine',requireToken, adminController.todaysRoutine)
-
+mainRouter.get('/viewRoutine', requireToken, adminController.viewRoutine )
 
 
 //Courses
 mainRouter.patch('/updateCourses', requireToken, adminController.updateCourses)
 mainRouter.get('/viewCourses', requireToken, adminController.viewCourses)
 mainRouter.delete('/deleteCourses', requireToken, adminController.deleteCourses)
+
 
 // student account status
 mainRouter.get('/pendingStatus', requireToken, adminController.pendingStatus)
@@ -34,7 +41,6 @@ mainRouter.get('/disableStatus', requireToken, adminController.disableStatus)
 mainRouter.post('/registerTeacher', requireToken ,adminController.registerTeacher)
 mainRouter.put('/updateTeacherProfile/:userId', requireToken, adminController.updateTacherProfile)
 mainRouter.get('/viewTeacherProfile/:userId', requireToken, adminController.viewTeacherProfile)
-
 
 
 //assigning and removing courses

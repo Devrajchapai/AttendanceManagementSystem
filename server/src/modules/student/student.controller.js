@@ -31,7 +31,6 @@ class StudentController{
 
     }
 
-
 }
 
 const studentController = new StudentController()

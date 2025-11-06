@@ -70,7 +70,7 @@ const student = mongoose.Schema({
 
     assignedSubjects: [String],
     
-    attendance: [{
+    dayAttendance: {
         date:{
             type: Date,
         },
@@ -78,6 +78,16 @@ const student = mongoose.Schema({
             type: String,
             enum: ["present", "absent"],
         },
+    },
+
+    subjectAttendance:[{
+        subject: String,
+        date: Date,
+        status:{
+            type: String,
+            enum: ["present", "absent"],
+        },
+
     }],
 
     workingDays: {
