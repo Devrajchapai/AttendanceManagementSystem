@@ -12,13 +12,6 @@ const classSchema = mongoose.Schema({
     endTime: {
         type: String,
         required: true
-    },
-
-    classStatus: {
-      type: String, 
-      enum: ['regular', 'cancled', 'exchanged'],
-      require: true,
-      default: 'regular'
     }
 });
 

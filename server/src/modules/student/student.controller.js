@@ -1,6 +1,9 @@
 const mongoose = require ('mongoose')
 const studentModel = require ('../user/student.model')
 require('dotenv').config()
+const passData = require('../../utlis/passData')
+const teacherController = require('../teacher/teacher.controller')
+
 
 class StudentController{
 
@@ -29,6 +32,17 @@ class StudentController{
                 res.send('failed to extract data')
             }
 
+    }
+
+    submitAttedance = async(req, res)=>{
+       try{
+           const currentSubject =  passData.getData('subject')
+           
+
+           
+       }catch(err){
+        console.log(err)
+       }
     }
 
 }

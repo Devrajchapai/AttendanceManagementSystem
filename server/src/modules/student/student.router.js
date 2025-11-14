@@ -11,6 +11,7 @@ const studentController = require('./student.controller')
 mainRouter.post('/updateProfile', requireToken, setPath('student'), uploader.single('image'), studentController.updateProfile)
 mainRouter.get('/profile', requireToken, studentController.profile)
 
+mainRouter.get('/submitAttedance', requireToken, studentController.submitAttedance)
 
 
 module.exports = mainRouter

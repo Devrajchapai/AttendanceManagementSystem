@@ -11,7 +11,6 @@ mainRouter.use('/student', studentRouter)
 mainRouter.use('/teacher', teacherRouter )
 mainRouter.use('/admin', adminRouter )
 
-const admin = require('../modules/admin/admin.controller')
-//setInterval(admin.currentClass, 3000)
+
 
 module.exports =  mainRouter; 

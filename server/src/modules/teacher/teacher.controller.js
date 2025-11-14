@@ -1,7 +1,7 @@
 const mongoose = require ('mongoose')
 const teacherModel = require('../user/teacher.model')
 require('dotenv').config()
-
+const passData = require('../../utlis/passData')
 class TeacherController{
 
     updateProfile = async(req, res) =>{
@@ -33,6 +33,19 @@ class TeacherController{
         }
     }
 
+    takeAttendance = async(req, res)=>{
+        const {currentSubject} = req.body;
+
+        try{
+            passData.setData('subject',currentSubject)
+            res.send(`sended an notificaion for attendance`)
+        }catch(err){
+            console.log(err);
+            res.send(`failed to take attedance`)
+        }
+        
+
+    }   
     
 }
 
