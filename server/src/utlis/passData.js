@@ -4,11 +4,12 @@ class sharedData {
     }
 
     setData(key, value){
-        this.data[key] = value
+        this.data[key] = value;
+        
     }
 
     getData(key){
-        return this.data[key]
+        return this.data[key]    
     }
 
 }

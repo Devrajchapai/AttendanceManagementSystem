@@ -1,7 +1,6 @@
 require('dotenv').config()
 const express = require('express');
 require('./src/config/config.mongoose')
-require('./src/modules/background/background.router')
 const mainRouter = require('./src/config/config.routes')
 const requireToken = require('./src/middleware/requireToken')
 const app = express();

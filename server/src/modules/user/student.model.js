@@ -77,6 +77,7 @@ const student = mongoose.Schema({
         status:{
             type: String,
             enum: ["present", "absent"],
+            default: 'absent',
         },
     },
 
@@ -86,6 +87,7 @@ const student = mongoose.Schema({
         status:{
             type: String,
             enum: ["present", "absent"],
+            default: 'absent',
         },
 
     }],
@@ -99,6 +101,8 @@ const student = mongoose.Schema({
         type: Number,
         default: 0,
     },
+
+    attendanceStatus: Boolean,
 
 })
 

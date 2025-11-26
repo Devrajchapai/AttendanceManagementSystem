@@ -34,14 +34,26 @@ class StudentController{
 
     }
 
-    submitAttedance = async(req, res)=>{
+    isAttendanceAvailable = async(req, res)=>{
+        const {_id} = req.user;
        try{
-           const currentSubject =  passData.getData('subject')
-           
+        const student = await studentModel.findById({_id}, {attendanceStatus: 1})
+        const currentSubject=  passData.getData('currentSubject');
 
-           
-       }catch(err){
-        console.log(err)
+        if(student.attendanceStatus)
+            res.status(200).json({
+                message:`Take the attendance for the ${currentSubject} class`,
+                attendanceStatus: true
+        })
+
+        if(!student.attendanceStatus){
+            res.status(200).json({
+                attendanceStatus: false
+            })
+        }
+        }catch(err){
+            console.log(err)
+            res.status(400).send(`server-side error`)
        }
     }
 
