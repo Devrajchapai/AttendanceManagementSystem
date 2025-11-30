@@ -12,6 +12,9 @@ mainRouter.post('/updateProfile', requireToken, setPath('student'), uploader.sin
 mainRouter.get('/profile', requireToken, studentController.profile)
 
 mainRouter.get('/isAttendanceAvailable', requireToken, studentController.isAttendanceAvailable)
+mainRouter.post('/submitAttendance', requireToken, studentController.submitAttendance)
+
+mainRouter.get('/attendaceHistory',requireToken, studentController.attendaceHistory)
 
 
 module.exports = mainRouter

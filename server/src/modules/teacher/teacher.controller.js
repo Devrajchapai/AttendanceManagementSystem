@@ -39,7 +39,8 @@ class TeacherController{
         const {currentSubject} = req.body;
         try{
             
-            const students = await studentModel.find({assignedSubjects: currentSubject}, {_id: 1} )
+            const students = await studentModel.find({assignedSubjects: currentSubject}, {_id: 1 } )
+
             
             passData.setData('currentSubject',currentSubject);
             students.forEach((id)=>{console.log(`${id._id}\n`)})
