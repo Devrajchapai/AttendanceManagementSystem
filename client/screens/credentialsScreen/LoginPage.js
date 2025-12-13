@@ -2,18 +2,48 @@ import { useState } from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { Button, TextInput } from 'react-native-paper';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { LoginSchema } from '../../tools/validationSchema';
 
 const { width } = Dimensions.get("window");
 
 const LoginPage = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('admin');
-  const [passwordVisibility, setPasswordVisibility] = useState(true);
+  const [passwordVisibility, setPasswordVisibility] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
-  function submit() {
-    console.log(role);
-  }
+
+  const submit =async ()=> {
+    try{
+
+      if(role != 'admin'){
+        await LoginSchema.validate(
+          {email,password},
+          {abortEarly: false}
+        );  
+    }
+      setErrors({});
+      setLoading(true)
+
+    }catch(err){
+       // Yup validation errors
+      if (err.name === 'ValidationError') {
+        const newErrors = {};
+        err.inner.forEach(e => {
+          newErrors[e.path] = e.message;
+        });
+        setErrors(newErrors);
+      } else {
+        // API or network error
+        console.log('Error', err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+    }
+  
 
   return (
     <SafeAreaProvider>
@@ -29,14 +59,16 @@ const LoginPage = () => {
     
           <TextInput
             mode='flat'
-            label='Username'
-            value={username}
-            onChangeText={text => setUsername(text)}
+            label='email'
+            value={email}
+            onChangeText={text => setEmail(text)}
             placeholder='example@gmail.com'
             left={<TextInput.Icon icon='account' />}
             style={styles.input}
           />
-
+           {errors.email && (
+        <Text style={{ color: 'red' }}>{errors.email}</Text>
+      )}
           {/* Password */}
           <TextInput
             mode='flat'
@@ -54,7 +86,9 @@ const LoginPage = () => {
             }
             style={styles.input}
           />
-
+          {errors.password && (
+        <Text style={{ color: 'red' }}>{errors.password}</Text>
+      )}
           
           <View style={styles.roleContainer}>
             <Button
@@ -106,7 +140,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
 
-  /* TITLE STYLES */
+
   titleContainer: {
     marginBottom: 25,
     alignItems: "center",
@@ -128,13 +162,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
 
-  /* INPUT STYLES */
+
   input: {
     width: "100%",
     backgroundColor: "white",
   },
 
-  /* ROLE BUTTONS SIDE BY SIDE */
+
   roleContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -154,7 +188,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  /* LOGIN BUTTON */
   loginBtn: {
     marginTop: 15,
     borderRadius: 10,
