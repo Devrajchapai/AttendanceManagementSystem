@@ -11,8 +11,8 @@ class AuthController {
     login = async (req, res) => {
         const { email, password, role } = req.body
 
-        if (!email || !password, !role) {
-            return res.status(400).send({ error: "must provide email or password or role" });
+        if (!email || !password || !role) {
+            return res.status(400).json({ message: "must provide email or password or role" });
         }
 
 
@@ -20,32 +20,34 @@ class AuthController {
         if (role == 'student') {
             var user = await studentModel.findOne({ email })
             if(user.status === 'pending'){
-                res.status(403).send(`your account status is pending !!! contact your adminstration to active your account`)
+                return res.status(403).json({message: `your account status is pending !!! contact your adminstration to active your account`})
             }
         } else if (role === 'teacher') {
             var user = await teacherModel.findOne({ email })
         } else if (role === 'admin') {
             var user = await adminModel.findOne({ email })
         } else {
-            res.status(300).send(`invalid data`)
+            return res.status(400).json({message:`invalid data`})
         }
 
         if (!user) {
-            return res.status(400).send({ error: "user doesn't exit" });
+            return res.status(400).json({ message: "user doesn't exit" });
         }
-        1
+        
         try {
             const checkPassword = await bcrypt.compare(password, user.password)
             if (checkPassword) {
                 const token = await jwt.sign({ userId: user._id, userRole: role }, process.env.JWT_PRIVATE_KEY)
-                return res.status(200).send(token)
+                return res.status(200).json({
+                    "token": token
+                })
 
             } else {
-                res.status(300).send("must provide correct information")
+                return res.status(401).json({message:"must provide valid information"})
             }
 
         } catch (err) {
-            res.status(400).send(`must provide email or password or role`)
+            return res.status(500).json({message:`must provide email or password or role`})
         }
     }
 
@@ -64,19 +66,19 @@ class AuthController {
             } else if (role === 'admin') {
                 var user = await adminModel.findOne({ email })
             } else {
-                res.status(400).send(`something went wrong`)
+                res.status(400).json({message: `something went wrong`})
             }
 
 
             const response = await user.updateOne({ password: newHashPassword })
             if (response.modifiedCount > 0) {
-                res.status(200).send(`your password is updated`);
+                res.status(200).josn({message:`your password is updated`});
             } else {
-                res.status(400).send(`password remains same`)
+                res.status(400).json({message:`password remains same`})
             }
 
         } catch (err) {
-            res.status(400).send(`something went wrong, try again in a while`)
+            res.status(400).json({message:`something went wrong, try again in a while`})
             console.log(err)
         }
     }
