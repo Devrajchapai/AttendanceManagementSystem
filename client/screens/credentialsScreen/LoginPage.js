@@ -1,10 +1,13 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState } from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { Button, TextInput } from 'react-native-paper';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { LoadingScreen } from '../../tools/loadingScreen';
 import { LoginSchema } from '../../tools/validationSchema';
 
-const { width } = Dimensions.get("window");
+
+const { width } = Dimensions.get("screen");
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -18,17 +21,36 @@ const LoginPage = () => {
   const submit =async ()=> {
     try{
 
-      if(role != 'admin'){
         await LoginSchema.validate(
           {email,password},
           {abortEarly: false}
         );  
-    }
+        setLoading(true)
       setErrors({});
-      setLoading(true)
+      
+      
+      const res = await fetch('http://192.168.1.5:4000/authRouter/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email,
+          password, 
+          role
+        })
+      });
+
+      const data = await res.json();
+
+      if(!res.ok){
+        throw new Error(data.message || 'Login Failed');
+      }
+
+      await AsyncStorage.setItem('token', data.token)
+      await AsyncStorage.setItem('role', role)
 
     }catch(err){
-       // Yup validation errors
       if (err.name === 'ValidationError') {
         const newErrors = {};
         err.inner.forEach(e => {
@@ -36,7 +58,6 @@ const LoginPage = () => {
         });
         setErrors(newErrors);
       } else {
-        // API or network error
         console.log('Error', err.message);
       }
     } finally {
@@ -50,7 +71,8 @@ const LoginPage = () => {
       <SafeAreaView style={styles.safe}>
         <View style={styles.container}>
 
-          
+       <LoadingScreen loadingVisibility={loading}/>
+      
           <View style={styles.titleContainer}>
             <Text style={styles.title}>Login</Text>
             <Text style={styles.collegeTitle}>Nagarjuna College of IT</Text>
@@ -93,7 +115,7 @@ const LoginPage = () => {
           <View style={styles.roleContainer}>
             <Button
               mode={role == 'student' ? 'contained-tonal' : 'contained'}
-              icon='account-school'
+              icon='book-open-page-variant-outline'
               onPress={() => { role == 'student' ? setRole('admin') : setRole('student') }}
               style={styles.roleBtn}
               labelStyle={styles.roleLabel}
@@ -103,7 +125,7 @@ const LoginPage = () => {
 
             <Button
               mode={role == 'teacher' ? 'contained-tonal' : 'contained'}
-              icon='cast-education'
+              icon='account-school'
               onPress={() => { role == 'teacher' ? setRole('admin') : setRole('teacher') }}
               style={styles.roleBtn}
               labelStyle={styles.roleLabel}
@@ -120,7 +142,7 @@ const LoginPage = () => {
           >
             LOGIN
           </Button>
-
+          
         </View>
       </SafeAreaView>
     </SafeAreaProvider>
