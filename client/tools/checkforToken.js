@@ -1,11 +1,14 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+
   const checkTokenAvalibility =async()=>{
-    const token = await AsyncStorage.getItem('token');
-    if(token){
-        return 'true';
-    }else{
-        return 'false';
+    try{
+        const token = await AsyncStorage.getItem('token');
+       return token;
+        
+    }catch(err){
+        console.log("error while checking for token")
+        return null
     }
 }
 
