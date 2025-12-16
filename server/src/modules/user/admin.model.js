@@ -54,9 +54,9 @@ const admin = mongoose.Schema({
     default: "admin",
   },
 
-  profile: {
-    data: Buffer,
-    contentType: String,
+  profileImage: {
+    type: String,
+    default: null, // Default to null if no image is uploaded
   },
 
   previousAdmins: [String],

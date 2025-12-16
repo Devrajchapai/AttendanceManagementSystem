@@ -9,7 +9,7 @@ const {setPath, uploader} = require('../../middleware/uploder')
 const teacherController = require('../teacher/teacher.controller')
 
 
-mainRouter.post('/updateprofile', requireToken, setPath('teacher'), uploader.single('image'), teacherController.updateProfile )
+mainRouter.post('/updateprofile', teacherController.updateProfile )
 mainRouter.get('/profile', requireToken, teacherController.profile )
 
 

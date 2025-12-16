@@ -72,7 +72,8 @@ class AuthController {
 
             const response = await user.updateOne({ password: newHashPassword })
             if (response.modifiedCount > 0) {
-                res.status(200).josn({message:`your password is updated`});
+                // FIX: Corrected typo from .josn to .json
+                res.status(200).json({message:`your password is updated`});
             } else {
                 res.status(400).json({message:`password remains same`})
             }
@@ -82,6 +83,8 @@ class AuthController {
             console.log(err)
         }
     }
+
+
 
 }
 

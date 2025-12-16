@@ -1,196 +1,213 @@
-const mongoose = require ('mongoose')
-const studentModel = require ('../user/student.model')
-require('dotenv').config()
-const passData = require('../../utlis/passData')
-const adminModel = require('../user/admin.model')
-const haversineDistance = require('../../utlis/calculateDistance')
+const mongoose = require("mongoose");
+const studentModel = require("../user/student.model");
+require("dotenv").config();
+//const passData = require("../../utlis/passData");
+const adminModel = require("../user/admin.model");
+const haversineDistance = require("../../utlis/calculateDistance");
+const AttendanceSessionModel = require('../attendane/AttendanceSession.model')
 
-class StudentController{
-
-    updateProfile = async(req, res) =>{
-            if(req.file){
-            req.image = req.file.filename
-            }
-
-        try{
-            res.json({
-                image_url: `http://localhost:${process.env.EXPRESS_PORT}/public/upload/student/`+ req.image
-            })
-        }catch(err){
-            res.send(`failed to extract data`)
-        }
-        
-        
-    }
-
-    profile = async(req, res) =>{
-            const {_id} = req.user
-            try{
-                const user = await studentModel.findById({_id})
-                res.json({user})
-            }catch(err){
-                res.send('failed to extract data')
-            }
-
-    }
-
-    isAttendanceAvailable = async(req, res)=>{
-        const {_id} = req.user;
-       try{
-        const student = await studentModel.findById({_id}, {attendanceStatus: 1})
-        const currentSubject=  passData.getData('currentSubject');
-
-        if(student.attendanceStatus)
-            res.status(200).json({
-                message:`Take the attendance for the ${currentSubject} class`,
-                attendanceStatus: true
-        })
-
-        if(!student.attendanceStatus){
-            res.status(200).json({
-                attendanceStatus: false
-            })
-        }
-        }catch(err){
-            console.log(err)
-            res.status(400).send(`server-side error`)
-       }
-    }
-
-    submitAttendance = async (req, res) => {
-    const { studentLatitude, studentLongitude, subjectName } = req.body;
-    const { id } = req.user; 
-
-    if (!subjectName) {
-        return res.status(400).json({ message: "Subject name is required to mark attendance." });
+class StudentController {
+  updateProfile = async (req, res) => {
+    if (req.file) {
+      req.image = req.file.filename;
     }
 
     try {
-        // 1. Get College Location Configuration
-        const admin = await adminModel.findOne({ role: "admin" }, { collegeLocation: 1 });
-        
-        if (!admin || !admin.collegeLocation) {
-            return res.status(500).json({ message: "College location configuration is missing." });
-        }
-        
-        // Extract college's center and required radius (range)
-        const { latitude, longitude, range } = admin.collegeLocation;
-        
-        // 2. Calculate Distance
-        const distance = haversineDistance(
-            latitude, longitude, 
-            studentLatitude, studentLongitude
-        );
+      res.json({
+        image_url:
+          `http://localhost:${process.env.EXPRESS_PORT}/public/upload/student/` +
+          req.image,
+      });
+    } catch (err) {
+      res.send(`failed to extract data`);
+    }
+  };
 
-        // 3. Check Boundary Condition
-        if (distance > range) {
-            const distanceOut = (distance - range).toFixed(2);
+  profile = async (req, res) => {
+    const { _id } = req.user;
+    try {
+      const user = await studentModel.findById({ _id });
+      res.json({ user });
+    } catch (err) {
+      res.send("failed to extract data");
+    }
+  };
+
+  isAttendanceAvailable = async (req, res) => {
+        const { _id: studentId } = req.user;
+        const student = req.user; // req.user is the full student object from requireToken
+
+        if (student.status !== 'active') {
             return res.status(403).json({ 
-                message: `You are out of the college boundary. You are ${distanceOut} km outside the required range of ${range} km.`
+                status: false, 
+                message: "Account inactive. Contact administration." 
             });
         }
-        
-        // --- 4. Student IS IN RANGE: Mark Attendance ---
-        
-        // Retrieve current days to calculate increments
-        const student = await studentModel.findById(id, { workingDays: 1, presentDays: 1 });
-        
-        if (!student) {
-             return res.status(404).json({ message: "Student record not found." });
+
+        try {
+            // 1. Check for active session matching the student's subjects/class
+            const activeSession = await AttendanceSessionModel.findOne({
+                subject: { $in: student.assignedSubjects },
+                // Add more filters if needed (e.g., currentClass: student.currentClass)
+            });
+
+            if (!activeSession) {
+                return res.status(200).json({
+                    status: false,
+                    message: "No attendance is currently active for your subjects.",
+                    attendanceStatus: false,
+                    subject: null,
+                    location: null,
+                });
+            }
+
+            // 2. Respond with the live session details
+            res.status(200).json({
+                status: true,
+                message: `Attendance is available for ${activeSession.subject}.`,
+                attendanceStatus: true, // This is now redundant but kept for existing client logic
+                subject: activeSession.subject,
+                location: activeSession.collegeLocation,
+            });
+
+        } catch (err) {
+            console.error("Error in isAttendanceAvailable:", err);
+            res.status(500).json({
+                status: false,
+                message: "Server error while checking attendance availability.",
+            });
         }
-
-        // Atomically update fields
-        const newWorkingDays = student.workingDays + 1;
-        const newPresentDays = student.presentDays + 1;
-
-        // Use findOneAndUpdate to perform the update and return the new document
-        const updatedStudent = await studentModel.findOneAndUpdate(
-            { _id: id },
-            { 
-                // $set: {
-                //     workingDays: newWorkingDays, 
-                //     presentDays: newPresentDays,
-                // },
-
-                $push: { 
-                    subjectAttendance: {
-                        subject: subjectName,
-                        date: new Date(),
-                        status: "present", 
-                    }
-                }
-            },
-            { new: true, runValidators: true } 
-        );
-
-        return res.status(200).json({
-            message: `Attendance marked successfully for ${subjectName}`
-        });
-
-    } catch (err) {
-        console.error("Attendance submission error:", err);
-        res.status(500).json({ message: "Something went wrong during attendance submission. Please check server logs." });
-    }
     };
 
-     attendaceHistory = async (req, res) => {
-    // Extract the student ID from the authenticated user object
-    const { id } = req.user; 
+    submitAttendance = async (req, res) => {
+        const { latitude, longitude } = req.body;
+        const { _id: studentId, assignedSubjects } = req.user; // Get data from authenticated user
 
-    try {
-        // 1. Query the Student Model
-        // Use findById and projection to retrieve only the required attendance fields.
-        const history = await studentModel.findById(
-            id,
-            { 
-                subjectAttendance: 1, 
-                workingDays: 1, 
-                presentDays: 1,
-                _id: 0 // Exclude the document ID for cleaner output
+        try {
+            // 1. Find the active attendance session
+            const activeSession = await AttendanceSessionModel.findOne({
+                subject: { $in: assignedSubjects }
+            });
+
+            if (!activeSession) {
+                return res.status(400).json({ 
+                    status: false, 
+                    message: "Attendance window is closed or not started." 
+                });
             }
-        );
 
-        if (!history) {
-            return res.status(404).json({ 
-                status: false,
-                message: "Student record not found." 
+            const { collegeLocation, subject: currentSubject } = activeSession;
+
+            // 2. Perform Geofencing Check
+            const distance = haversineDistance(
+                latitude,
+                longitude,
+                collegeLocation.latitude,
+                collegeLocation.longitude
+            );
+
+            if (distance > collegeLocation.range_km) {
+                return res.status(403).json({
+                    status: false,
+                    message: `You are too far from the college location. Distance: ${distance.toFixed(2)} km.`,
+                });
+            }
+
+            // 3. Mark attendance
+            const date = new Date();
+            const today = date.toISOString().split('T')[0];
+            const attendanceTime = date;
+
+            const updateResult = await studentModel.findOneAndUpdate(
+                { _id: studentId },
+                {
+                    $set: { attendanceStatus: false }, // Reset status immediately
+                    $push: {
+                        subjectAttendance: {
+                            subject: currentSubject,
+                            date: today,
+                            time: attendanceTime,
+                            status: 'Present',
+                        }
+                    },
+                    $inc: { 
+                        workingDays: 1, 
+                        presentDays: 1 
+                    } // Increment counters
+                },
+                { new: true }
+            );
+
+            // Optional: End the session if it's based on a single student submission (not recommended)
+            // await AttendanceSessionModel.findByIdAndDelete(activeSession._id);
+
+            res.status(200).json({ 
+                status: true, 
+                message: `Attendance submitted successfully for ${currentSubject}.` 
+            });
+
+        } catch (err) {
+            console.error("Error in submitAttendance:", err);
+            res.status(500).json({ 
+                status: false, 
+                message: "Server error during attendance submission." 
             });
         }
+    };
 
-        // 2. Calculate Percentage (ensuring no division by zero)
-        const totalWorkingDays = history.workingDays || 0;
-        const presentDays = history.presentDays || 0;
-        
-        const attendancePercentage = totalWorkingDays > 0 
-            ? ((presentDays / totalWorkingDays) * 100).toFixed(2)
-            : "0.00";
+  attendaceHistory = async (req, res) => {
+   
+    const { id } = req.user;
 
-        // 3. Format the response data
-        res.status(200).json({
-            status: true,
-            message: "Attendance history retrieved successfully.",
-            data: {
-                summary: {
-                    workingDays: totalWorkingDays,
-                    presentDays: presentDays,
-                    percentage: attendancePercentage
-                },
-                // Sort by date descending (most recent first) for display
-                subjectDetails: history.subjectAttendance.sort((a, b) => b.date - a.date) 
-            }
+    try {
+      const history = await studentModel.findById(id, {
+        subjectAttendance: 1,
+        workingDays: 1,
+        presentDays: 1,
+        _id: 0, // Exclude the document ID for cleaner output
+      });
+
+      if (!history) {
+        return res.status(404).json({
+          status: false,
+          message: "Student record not found.",
         });
+      }
 
+      // 2. Calculate Percentage (ensuring no division by zero)
+      const totalWorkingDays = history.workingDays || 0;
+      const presentDays = history.presentDays || 0;
+
+      const attendancePercentage =
+        totalWorkingDays > 0
+          ? ((presentDays / totalWorkingDays) * 100).toFixed(2)
+          : "0.00";
+
+      // 3. Format the response data
+      res.status(200).json({
+        status: true,
+        message: "Attendance history retrieved successfully.",
+        data: {
+          summary: {
+            workingDays: totalWorkingDays,
+            presentDays: presentDays,
+            percentage: attendancePercentage,
+          },
+          // Sort by date descending (most recent first) for display
+          subjectDetails: history.subjectAttendance.sort(
+            (a, b) => b.date - a.date
+          ),
+        },
+      });
     } catch (err) {
-        console.error("Error retrieving attendance history for ID:", id, err);
-        res.status(500).json({ 
-            status: false,
-            message: "Failed to load attendance history due to a server error." 
-        });
+      console.error("Error retrieving attendance history for ID:", id, err);
+      res.status(500).json({
+        status: false,
+        message: "Failed to load attendance history due to a server error.",
+      });
     }
-};
-
-
+  };
 }
 
-const studentController = new StudentController()
-module.exports = studentController
+const studentController = new StudentController();
+module.exports = studentController;
