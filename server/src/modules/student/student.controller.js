@@ -66,47 +66,73 @@ isAttendanceAvailable = async (req, res) => {
     }
 };
 
-submitAttendance = async (req, res) => {
-    const { latitude, longitude } = req.body;
-    const { _id: studentId } = req.user; // Get ID from token
+
+
+ submitAttendance = async (req, res) => {
+    const { latitude: studentLat, longitude: studentLon } = req.body;
+    const { _id: studentId } = req.user;
 
     try {
-        // 1. Retrieve the student from DB to get the live 'activeSubject'
+        // 1. Retrieve the student and their active subject
         const student = await studentModel.findById(studentId);
-
         if (!student || !student.activeSubject) {
             return res.status(400).json({ status: false, message: "No active session for you." });
         }
 
         const currentSubject = student.activeSubject;
 
-        // 2. Fetch session coordinates using that subject
-        const activeSession = await AttendanceSessionModel.findOne({ subject: currentSubject });
+        // 2. Fetch the College location and range defined by Admin
+        const admin = await adminModel.findOne({ username: "admin" });
+        if (!admin || !admin.collegeLocation) {
+            return res.status(500).json({ status: false, message: "College location not configured." });
+        }
 
-        // ... (Perform Geofencing Check with distance calculation) ...
+        const { latitude: collegeLat, longitude: collegeLon, range } = admin.collegeLocation;
 
-        // 3. Mark attendance and CLEAR the field in the database
-        await studentModel.updateOne(
-            { _id: studentId },
-            {
-                $set: { 
-                    attendanceStatus: false,
-                    activeSubject: "" // Clear the subject once finished
-                },
-                $push: {
-                    subjectAttendance: {
-                        subject: currentSubject,
-                        date: new Date(),
-                        time: new Date(),
-                        status: 'Present',
-                    }
-                },
-                $inc: { workingDays: 1, presentDays: 1 }
-            }
-        );
+        // 3. Calculate distance using Haversine formula
+        const distanceInKm = haversineDistance(studentLat, studentLon, collegeLat, collegeLon);
+        const distanceInMeters = distanceInKm * 1000;
 
-        res.status(200).json({ status: true, message: "Attendance marked." });
+        // 4. Determine Status based on Geofencing
+        const isWithinRange = distanceInMeters <= range;
+        const attendanceStatusLabel = isWithinRange ? 'present' : 'absent';
+
+        // 5. Update Database and CLEAR the active session
+        // Note: We only increment 'presentDays' if they are actually 'Present'
+        const updateFields = {
+            $set: { 
+                attendanceStatus: false,
+                activeSubject: "" 
+            },
+            $push: {
+                subjectAttendance: {
+                    subject: currentSubject,
+                    date: new Date(),
+                    time: new Date(),
+                    status: attendanceStatusLabel, // Dynamically set to 'Present' or 'Absent'
+                }
+            },
+            $inc: { workingDays: 1 } // Total classes conducted increases regardless
+        };
+
+        if (isWithinRange) {
+            updateFields.$inc.presentDays = 1; // Only increment if they were in range
+        }
+
+        await studentModel.updateOne({ _id: studentId }, updateFields);
+
+        // 6. Response
+        if (isWithinRange) {
+            res.status(200).json({ status: true, message: "Attendance marked as Present." });
+        } else {
+            res.status(200).json({ 
+                status: true, 
+                message: `Marked as Absent. You were ${Math.round(distanceInMeters)}m away from campus.` 
+            });
+        }
+
     } catch (err) {
+        console.error(err);
         res.status(500).json({ status: false, message: "Submission failed." });
     }
 };
