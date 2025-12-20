@@ -2,6 +2,12 @@ const mongoose = require('mongoose')
 
 const teacher = mongoose.Schema({
 
+    // teacherId: {
+    //     type: String,
+    //     unique: true,
+    //     sparse: true, // This allows multiple 'null' values
+    // },
+
     username: {
         type: String,
         require: true,
@@ -29,7 +35,7 @@ const teacher = mongoose.Schema({
 
     status:{
         type: String,
-        enum: ['inactive', 'active', 'on leave']
+        enum: ['inactive', 'active']
     },
 
     mobileNumber: String,

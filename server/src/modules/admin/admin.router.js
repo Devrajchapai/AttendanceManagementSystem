@@ -8,6 +8,8 @@ const adminController = require('./admin.controller')
 
 //---------------------------------------------Admin Routes----------------------------------------------------------------------------
 
+mainRouter.get('/viewAdminProfile', requireToken, adminController.viewAdminProfile);
+
 // college location
 mainRouter.post('/updateCollegeLocation', requireToken, adminController.updateCollegeLocation)
 mainRouter.get('/viewCollegeLocation', requireToken, adminController.viewCollegeLocation)

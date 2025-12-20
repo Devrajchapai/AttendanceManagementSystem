@@ -1,6 +1,12 @@
 const mongoose = require("mongoose");
 
 const student = mongoose.Schema({
+  // studentId: {
+  //   type: String,
+  //   unique: true,
+  //   sparse: true, 
+  //   default: null
+  // },
   username: {
     type: String,
     require: true,
@@ -8,7 +14,7 @@ const student = mongoose.Schema({
   email: {
     type: String,
     require: true,
-    unique: true,
+    
   },
   password: {
     type: String,

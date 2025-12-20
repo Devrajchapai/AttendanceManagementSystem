@@ -10,6 +10,26 @@ const currentTime = require('../../utlis/currentTime')
 class AdminController {
   //------------------------------------------------- ADMIN ---------------------------------------------------------------------------
 
+viewAdminProfile = async (req, res) => {
+    // The _id is extracted from the decoded JWT token by the requireToken middleware
+    const { _id } = req.user; 
+
+    try {
+        // Find the admin in the database by their ID
+        const admin = await adminModel.findById(_id).select("-password"); // Exclude password for security
+
+        if (!admin) {
+            return res.status(404).json({ message: "Admin not found" });
+        }
+
+        // Return the admin data
+        res.status(200).json({ user: admin });
+    } catch (err) {
+        console.error("Error fetching admin profile:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
   // college location
   updateCollegeLocation = async (req, res) => {
     const { latitude, longitude, range } = req.body;
@@ -128,47 +148,22 @@ class AdminController {
   //retriving list of users
   retriveTeachers = async (req, res) => {
     try {
-      const listOfTeachers = await teacherModel.find(
-        {},
-        { username: 1 },
-        { sort: { username: 1 } }
-      );
-
-      if (!listOfTeachers) {
-        res.status(404).send(`couldn't retrive ...`);
-      }
-
-      res.status(200).json({
-        message: "retriving data",
-        data: listOfTeachers,
-      });
+        const teacher = await teacherModel.find({});
+        res.status(200).json(teacher); // Sending array directly
     } catch (err) {
-      console.log(err);
-      res.status(400).send("something went wrong");
+        res.status(500).json({ message: "Error fetching teacher" });
     }
-  };
+};
+
 
   retriveStudents = async (req, res) => {
     try {
-      const listofStudents = await studentModel.find(
-        {},
-        { username: 1 },
-        { sort: { username: 1 } }
-      );
-
-      if (!listofStudents) {
-        res.status(404).send(`couldn't retrive data`);
-      }
-
-      res.status(200).json({
-        message: "retriving data",
-        data: listofStudents,
-      });
+        const students = await studentModel.find({});
+        res.status(200).json(students); // Sending array directly
     } catch (err) {
-      console.log(err);
-      res.status(400).send(`something went wrong`);
+        res.status(500).json({ message: "Error fetching students" });
     }
-  };
+};
 
   //Routine for page
   updateSemesterRoutine = async (req, res) => {
@@ -199,7 +194,7 @@ class AdminController {
       );
       res.status(200).json({
         message: "updating today's routine ",
-        data: todaysClasses,
+        data: todaysClasses
       });
     } catch (err) {
       console.log(err);
@@ -207,28 +202,16 @@ class AdminController {
     }
   };
 
-  viewRoutine = async (req, res) =>{
-    const {_id} = req.user
-    const date = new Date()
-    const Ctime = currentTime()
-    try{
-      const response = await adminModel.findById({_id}, {routine : 1 })
-      if(!response){
-        res.status(400).send(`failed to retrieve routine`)
-      }
-
-      res.status(200).json({
-        message: 'retrieving routine',
-        data: response,
-       
-      })
-    }catch(err){
-      console.log(err)
-      res.status(400).send(`something went wrong`)
+  viewRoutine = async (req, res) => {
+    try {
+        const { _id } = req.user;
+        const admin = await adminModel.findById(_id);
+        // Ensure we send the array directly or a consistent object
+        res.status(200).json(admin.routine); 
+    } catch (err) {
+        res.status(500).json({ message: "Error fetching routine" });
     }
-
-
-  }
+};
   // retrieve student account base on status
   pendingStatus = async (req, res) => {
     try {
@@ -313,7 +296,7 @@ class AdminController {
         email,
         password: hashPassword,
         role,
-        status: "inactive",
+        status: "active",
       });
 
       await teacher.save();
@@ -446,14 +429,14 @@ class AdminController {
         email,
         password: hashPassword,
         role,
-        status: "pending",
+        status: "active",
       });
 
       await student.save();
-      res.status(200).send("new account created successfully");
+      res.status(200).json({message: "new account created successfully"});
     } catch (err) {
       console.log(err);
-      res.status(400).send(`something went wrong`);
+      res.status(400).json({message: `something went wrong`});
     }
   };
 
@@ -594,13 +577,13 @@ class AdminController {
       );
 
       if (!response) {
-        res.status(400).send(`failed to change status`);
+        res.status(400).json({message:"failed to change status"});
       }
 
-      res.status(200).send(`status changed to ${updatedStatus}`);
+      res.status(200).json({message: `status changed to ${updatedStatus}`});
     } catch (err) {
       console.log(err);
-      res.status(400).send(`something went wrong`);
+      res.status(400).json({message:`something went wrong`});
     }
   };
 }
