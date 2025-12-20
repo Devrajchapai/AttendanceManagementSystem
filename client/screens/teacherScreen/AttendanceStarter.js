@@ -1,34 +1,28 @@
-import { Picker } from '@react-native-picker/picker'; // ❗ REQUIRED INSTALL
+import { Picker } from '@react-native-picker/picker';
 import { useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { ActivityIndicator, Button, Card } from 'react-native-paper';
 
-const MOCK_CLASSES = ["CSIT 7th Sem", "BCA 5th Sem", "BBA 3rd Sem"];
-
 /**
  * AttendanceStarter Component
  * @param {string[]} assignedSubjects - List of subjects assigned to the teacher.
- * @param {function(string, string): Promise<boolean>} handleTakeAttendance - Function from parent to call the POST API (expects subject AND class).
+ * @param {function(string): Promise<boolean>} handleTakeAttendance - Function from parent to call the POST API (expects subject).
  */
 const AttendanceStarter = ({ assignedSubjects, handleTakeAttendance }) => {
-    // --- UPDATED: Renamed state variables for consistency ---
     const [currentSubject, setCurrentSubject] = useState(assignedSubjects.length > 0 ? assignedSubjects[0] : null);
-    const [currentClass, setCurrentClass] = useState(MOCK_CLASSES[0]);
-
     const [isAttendanceOpen, setIsAttendanceOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    // --- UPDATED: Uses the new state variables ---
     const handleStartAttendance = async () => {
-        if (!currentSubject || !currentClass) {
-            Alert.alert("Error", "Please select both a subject and a class to start attendance.");
+        if (!currentSubject) {
+            Alert.alert("Error", "Please select a subject to start attendance.");
             return;
         }
         
         setIsLoading(true);
 
-        // Pass the updated local variables to the parent's function
-        const success = await handleTakeAttendance(currentSubject, currentClass);
+        // Pass only the subject to the parent's API handler
+        const success = await handleTakeAttendance(currentSubject);
         
         if (success) {
             setIsAttendanceOpen(true);
@@ -41,7 +35,7 @@ const AttendanceStarter = ({ assignedSubjects, handleTakeAttendance }) => {
 
     const handleStopAttendance = () => {
         setIsAttendanceOpen(false);
-        Alert.alert("Attendance Stopped", "The attendance window has been closed. (API call to close session is required)");
+        Alert.alert("Attendance Stopped", "The attendance window has been closed.");
     };
 
     if (assignedSubjects.length === 0) {
@@ -60,35 +54,18 @@ const AttendanceStarter = ({ assignedSubjects, handleTakeAttendance }) => {
             <Card.Content>
                 <Text style={styles.headerText}>Attendance Control</Text>
                 
-                {/* 1. Subject Selector */}
+                {/* Subject Selector */}
                 <View style={styles.selectorGroup}>
                     <Text style={styles.label}>Select Subject:</Text>
                     <View style={styles.pickerContainer}>
                         <Picker
-                            selectedValue={currentSubject} // Use currentSubject
-                            onValueChange={(itemValue) => setCurrentSubject(itemValue)} // Use setCurrentSubject
+                            selectedValue={currentSubject}
+                            onValueChange={(itemValue) => setCurrentSubject(itemValue)}
                             style={styles.picker}
                             enabled={!isAttendanceOpen && !isLoading}
                         >
                             {assignedSubjects.map((subject) => (
                                 <Picker.Item key={subject} label={subject} value={subject} />
-                            ))}
-                        </Picker>
-                    </View>
-                </View>
-
-                {/* 2. Class Selector */}
-                <View style={styles.selectorGroup}>
-                    <Text style={styles.label}>Select Class:</Text>
-                    <View style={styles.pickerContainer}>
-                        <Picker
-                            selectedValue={currentClass} // Use currentClass
-                            onValueChange={(itemValue) => setCurrentClass(itemValue)} // Use setCurrentClass
-                            style={styles.picker}
-                            enabled={!isAttendanceOpen && !isLoading}
-                        >
-                            {MOCK_CLASSES.map((classItem) => (
-                                <Picker.Item key={classItem} label={classItem} value={classItem} />
                             ))}
                         </Picker>
                     </View>
@@ -101,14 +78,14 @@ const AttendanceStarter = ({ assignedSubjects, handleTakeAttendance }) => {
                     </View>
                 ) : isAttendanceOpen ? (
                     <>
-                        <Text style={styles.statusTextActive}>Session Open for: {currentSubject} in {currentClass}</Text>
+                        <Text style={styles.statusTextActive}>Session Open for: {currentSubject}</Text>
                         <Button 
                             mode="contained" 
                             onPress={handleStopAttendance} 
                             style={styles.stopButton}
                             labelStyle={{color: 'white'}}
                         >
-                            Stop Attendance Session
+                           <Text>Stop Attendance Session</Text> 
                         </Button>
                     </>
                 ) : (
@@ -118,7 +95,7 @@ const AttendanceStarter = ({ assignedSubjects, handleTakeAttendance }) => {
                         style={styles.startButton}
                         labelStyle={{color: 'white'}}
                     >
-                        Start Attendance Session
+                      <Text>Start Attendance Session</Text> 
                     </Button>
                 )}
             </Card.Content>
@@ -136,7 +113,7 @@ const styles = StyleSheet.create({
     cardActive: {
         borderWidth: 2,
         borderColor: '#28a745',
-        backgroundColor: '#e6f7ef',
+        backgroundColor: '#f0fdf4', // Lighter green for active state
     },
     headerText: {
         fontSize: 18,
@@ -162,7 +139,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     picker: {
-        // Adjusted style for better compatibility
+        // Platform specific styling can go here
     },
     noSubjectText: {
         color: '#dc3545',
@@ -181,7 +158,7 @@ const styles = StyleSheet.create({
     },
     statusTextActive: {
         textAlign: 'center',
-        color: '#28a745',
+        color: '#166534',
         fontWeight: 'bold',
         fontSize: 16,
         marginBottom: 10,

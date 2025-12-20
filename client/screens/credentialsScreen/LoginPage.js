@@ -220,7 +220,7 @@ const LoginPage = () => {
               style={styles.roleBtn}
               labelStyle={styles.roleLabel}
             >
-              Student
+              <Text>Student</Text>
             </Button>
 
             {/* Button for Teacher/Admin toggle */}
@@ -231,7 +231,7 @@ const LoginPage = () => {
               style={styles.roleBtn}
               labelStyle={styles.roleLabel}
             >
-              Teacher
+              <Text>Teacher</Text>
             </Button>
           </View>
 
@@ -242,7 +242,7 @@ const LoginPage = () => {
             style={styles.loginBtn}
             disabled={loading}
           >
-            LOGIN
+            <Text>LOGIN</Text>
           </Button>
         </View>
 
@@ -265,7 +265,7 @@ const LoginPage = () => {
             textColor: 'white',
           }}
         >
-          {snackbarMessage}
+         <Text>{snackbarMessage}</Text> 
         </Snackbar>
         {/* ------------------------------------------------------------------ */}
       </SafeAreaView>

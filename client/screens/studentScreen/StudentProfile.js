@@ -3,7 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import { BookOpen, Calendar, Library, Lock, LogOut, MapPin, Monitor, Phone, User } from 'lucide-react-native';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Modal, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Avatar, Button, Card, Paragraph, TextInput, Title } from "react-native-paper";
+import { Avatar, Button, Card, TextInput } from "react-native-paper";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import checkTokenAvalibility from "../../tools/checkforToken";
 import { LoadingScreen } from '../../tools/loadingScreen';
@@ -25,7 +25,7 @@ const PasswordChangeModal = ({ isVisible, currentPassword, setCurrentPassword, n
     >
         <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-                <Title style={styles.modalTitle}>Change Password</Title>
+                <Text style={styles.modalTitle}>Change Password</Text>
                 <TextInput
                     label="Current Password"
                     value={currentPassword}
@@ -283,7 +283,7 @@ const StudentProfile = () => {
                         <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
                     }
                 >
-                    <Title style={styles.headerTitle}>My Profile</Title>
+                    <Text style={styles.headerTitle}>My Profile</Text>
                     
                     <Card style={styles.profileCard}>
                         <View style={styles.imageContainer}>
@@ -304,8 +304,8 @@ const StudentProfile = () => {
                             {/* REMOVED: Change Photo button */}
                         </View>
                         
-                        <Title style={styles.nameText}>{userData.username || 'N/A'}</Title>
-                        <Paragraph style={styles.emailText}>{userData.email}</Paragraph>
+                        <Text style={styles.nameText}>{userData.username || 'N/A'}</Text>
+                        <Text style={styles.emailText}>{userData.email}</Text>
                         <View style={styles.badgeContainer}>
                              <View style={styles.statusBadge(userData.status === 'active')}>
                                 <Text style={styles.statusText}>{userData.status?.toUpperCase() || 'N/A'}</Text>
@@ -316,7 +316,7 @@ const StudentProfile = () => {
                         </View>
                     </Card>
 
-                    <Title style={styles.sectionHeader}>Personal Information</Title>
+                    <Text style={styles.sectionHeader}>Personal Information</Text>
                     
                     <TextInput label="Roll No" value={String(userData.rollNo || 'N/A')} mode="outlined" style={styles.input} disabled left={<TextInput.Icon icon={() => <Monitor size={20} color="#6c757d" />} />} />
                     <TextInput label="Student ID" value={String(userData.studentId || 'N/A')} mode="outlined" style={styles.input} disabled left={<TextInput.Icon icon={() => <User size={20} color="#6c757d" />} />} />
@@ -328,7 +328,7 @@ const StudentProfile = () => {
                     <TextInput label="Date of Birth" value={userData.DOB || 'N/A'} mode="outlined" style={styles.input} disabled left={<TextInput.Icon icon="cake" />} />
                     <TextInput label="Nationality" value={userData.nationality || 'N/A'} mode="outlined" style={styles.input} disabled left={<TextInput.Icon icon={() => <MapPin size={20} color="#6c757d" />} />} />
 
-                    <Title style={styles.sectionHeader}>Contact & Guardian Information (Editable)</Title>
+                    <Text style={styles.sectionHeader}>Contact & Guardian Information (Editable)</Text>
 
                     <TextInput
                         label="Phone Number"
@@ -358,7 +358,7 @@ const StudentProfile = () => {
                         {isSaving ? 'Saving...' : 'Save Changes (Phone)'}
                     </Button>
                     
-                    <Title style={styles.sectionHeader}>Security</Title>
+                    <Text style={styles.sectionHeader}>Security</Text>
 
                     <Button
                         icon={() => <Lock size={20} color="#007bff" />}

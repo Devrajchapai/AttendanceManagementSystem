@@ -2,7 +2,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { BookOpen, Lock, LogOut, MapPin, Monitor, Phone, User } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
 import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Avatar, Button, Card, Divider, Paragraph, TextInput, Title } from 'react-native-paper';
+import { Avatar, Button, Card, Divider, TextInput } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import checkTokenAvalibility from '../../tools/checkforToken';
 import { LoadingScreen } from '../../tools/loadingScreen';
@@ -179,10 +179,7 @@ const handleLogout = async (showConfirmation = true) => {
         const logoutAction = async () => {
             setIsLoading(true);
             await AsyncStorage.clear();
-            navigation.reset({
-                index: 0,
-                routes: [{ name: 'LoginPage' }],
-            });
+            navigation.reset({ index: 0, routes: [{ name: "LoginPage" }] });
             setIsLoading(false);
         };
 
@@ -217,9 +214,9 @@ const handleLogout = async (showConfirmation = true) => {
                 refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
             >
                 <View style={styles.header}>
-                    <Title style={styles.pageTitle}>My Profile</Title>
+                    <Text style={styles.pageTitle}>My Profile</Text>
                     <Button icon={LogOut} onPress={handleLogout}>
-                        Logout
+                        <Text>Logout</Text>
                     </Button>
                 </View>
 
@@ -233,7 +230,7 @@ const handleLogout = async (showConfirmation = true) => {
                             style={{ backgroundColor: profileUri ? 'transparent' : '#2563eb' }}
                         />
                         <View style={styles.infoContainer}>
-                            <Title style={styles.username}>{username}</Title>
+                            <Text style={styles.username}>{username}</Text>
                             <View style={styles.badge(status === 'active')}>
                                 <Text style={styles.statusText}>{status.toUpperCase()}</Text>
                             </View>
@@ -247,15 +244,15 @@ const handleLogout = async (showConfirmation = true) => {
                     {/* Basic Info */}
                     <View style={styles.detailRow}>
                         <User size={20} color="#64748b" />
-                        <Paragraph style={styles.detailText}>Teacher ID: {teacherId}</Paragraph>
+                        <Text style={styles.detailText}>Teacher ID: {teacherId}</Text>
                     </View>
                     <View style={styles.detailRow}>
                         <Monitor size={20} color="#64748b" />
-                        <Paragraph style={styles.detailText}>Email: {email}</Paragraph>
+                        <Text style={styles.detailText}>Email: {email}</Text>
                     </View>
                     <View style={styles.detailRow}>
                         <MapPin size={20} color="#64748b" />
-                        <Paragraph style={styles.detailText}>Department: {department || 'N/A'}</Paragraph>
+                        <Text style={styles.detailText}>Department: {department || 'N/A'}</Text>
                     </View>
                 </Card>
 
@@ -280,7 +277,7 @@ const handleLogout = async (showConfirmation = true) => {
                         style={styles.saveButton}
                         labelStyle={{color: 'white'}}
                     >
-                        {isSaving ? 'Saving...' : 'Save Changes'}
+                        <Text>{isSaving ? 'Saving...' : 'Save Changes'}</Text>
                     </Button>
                 </Card>
                 
@@ -295,7 +292,7 @@ const handleLogout = async (showConfirmation = true) => {
                             </View>
                         ))
                     ) : (
-                        <Paragraph style={styles.noSubjectText}>No subjects currently assigned.</Paragraph>
+                        <Text style={styles.noSubjectText}>No subjects currently assigned.</Text>
                     )}
                 </Card>
 
@@ -309,7 +306,7 @@ const handleLogout = async (showConfirmation = true) => {
                         style={styles.securityButton}
                         labelStyle={{ color: '#007bff' }}
                     >
-                        Change Password
+                        <Text>Change Password</Text>
                     </Button>
                 </Card>
                 
