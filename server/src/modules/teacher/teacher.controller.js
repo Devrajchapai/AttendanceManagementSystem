@@ -5,7 +5,7 @@ require('dotenv').config()
 //const passData = require('../../utlis/passData')
 const studentController = require('../student/student.controller')
 const AttendanceSessionModel = require('../attendane/AttendanceSession.model')
-
+const adminModel = require('../user/admin.model')
 class TeacherController{
 
     updateProfile = async(req, res) =>{
@@ -38,67 +38,76 @@ class TeacherController{
         }
     }
 
-   takeAttendance = async(req, res) => {
-    // 1. Destructure all required fields, including currentClass
-    const { currentSubject, currentClass } = req.body; 
-    
-    // 1b. Validation check
-    if (!currentSubject || !currentClass) {
+   
+takeAttendance = async (req, res) => {
+    // 1. Only require currentSubject now
+    const { currentSubject } = req.body; 
+
+    if (!currentSubject) {
         return res.status(400).json({
-            // Improved error message
-            message: "Missing subject or class for attendance session.",
+            message: "Missing subject for attendance session.",
             status: false
         });
     }
 
-    try{
-        // 2. Find all students assigned to the subject (Optional: find the whole document if needed)
-        // Note: For efficiency, we will use updateMany instead of find then individual updates.
-        
-        // --- OPTIONAL: Setting global session data (if you need it elsewhere) ---
-        // if (passData) {
-        //     passData.setData('currentSubject', currentSubject);
-        //     passData.setData('currentClass', currentClass); 
-        // }
+    try {
+        // 2. Fetch college location from admin settings for geofencing
+        const adminSettings = await adminModel.findOne();
+        if (!adminSettings || !adminSettings.collegeLocation) {
+            return res.status(500).json({ message: "College location not configured." });
+        }
 
-        // 3. Batch Update: Use updateMany for massive efficiency gains.
-        // This command finds ALL students assigned to the currentSubject and updates their attendanceStatus in one single database operation.
-        const updateResult = await studentModel.updateMany(
+        // 3. Create/Update the session based only on the subject
+        await AttendanceSessionModel.findOneAndUpdate(
+            { subject: currentSubject },
             { 
-                assignedSubjects: currentSubject,
-                // Optional: You might want to filter by class/semester too if students in different classes have the same subject name
-                // currentClass: currentClass 
-            }, 
+                subject: currentSubject,
+                collegeLocation: adminSettings.collegeLocation,
+                createdAt: new Date() 
+            },
+            { upsert: true }
+        );
+
+        // 4. Update all students taking this subject
+        const updateResult = await studentModel.updateMany(
+            { assignedSubjects: currentSubject }, 
             {
-                // Set the attendanceStatus flag to true, indicating they can now submit attendance
-                $set: { attendanceStatus: true }
+                $set: { 
+                    attendanceStatus: true,
+                    activeSubject: currentSubject // Store subject in student model
+                }
             }
         );
 
-        // Check if any students were updated
         if (updateResult.modifiedCount === 0) {
              return res.status(404).json({
-                message: `No students found assigned to subject: ${currentSubject}.`,
+                message: `No students found assigned to ${currentSubject}.`,
                 status: false
             });
         }
 
-        // 4. Send a proper JSON success response
         res.status(200).json({
-            message: `Attendance session opened for ${currentSubject} (${currentClass}). ${updateResult.modifiedCount} students notified.`,
+            message: `Attendance session opened for ${currentSubject}.`,
             status: true,
             updatedCount: updateResult.modifiedCount
         });
     } catch(err) {
-        console.error("Attendance Start Error:", err);
-        
-        // 5. Send a proper JSON error response
-        res.status(500).json({
-            message: `Failed to start attendance session due to a server error.`,
-            status: false
-        });
+        console.log(err)
+        res.status(500).json({ message: "Server error.", status: false });
     }
-  }
+}
+    // takeAttendance = async(req, res)=>{
+    //     const {currentSubject} = req.body;
+
+    //     try{
+    //         passData.setData('subject',currentSubject)
+    //         res.json({message: `sended an notificaion for attendance`})
+
+    //     }catch(err){
+    //         console.log(err);
+    //         res.send(`failed to take attedance`)
+    //     }
+    // }
 }
 
 const teacherController = new TeacherController()

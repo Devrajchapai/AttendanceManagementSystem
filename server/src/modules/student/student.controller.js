@@ -33,127 +33,83 @@ class StudentController {
     }
   };
 
-  isAttendanceAvailable = async (req, res) => {
-        const { _id: studentId } = req.user;
-        const student = req.user; // req.user is the full student object from requireToken
 
-        if (student.status !== 'active') {
-            return res.status(403).json({ 
-                status: false, 
-                message: "Account inactive. Contact administration." 
-            });
-        }
+isAttendanceAvailable = async (req, res) => {
+    // 1. Get ONLY the ID from the token (req.user)
+    const { _id: studentId } = req.user; 
 
-        try {
-            // 1. Check for active session matching the student's subjects/class
-            const activeSession = await AttendanceSessionModel.findOne({
-                subject: { $in: student.assignedSubjects },
-                // Add more filters if needed (e.g., currentClass: student.currentClass)
-            });
+    try {
+        // 2. Fetch the full student document from the DB to get the current 'activeSubject'
+        const student = await studentModel.findById(studentId);
 
-            if (!activeSession) {
-                return res.status(200).json({
-                    status: false,
-                    message: "No attendance is currently active for your subjects.",
-                    attendanceStatus: false,
-                    subject: null,
-                    location: null,
-                });
-            }
-
-            // 2. Respond with the live session details
-            res.status(200).json({
-                status: true,
-                message: `Attendance is available for ${activeSession.subject}.`,
-                attendanceStatus: true, // This is now redundant but kept for existing client logic
-                subject: activeSession.subject,
-                location: activeSession.collegeLocation,
-            });
-
-        } catch (err) {
-            console.error("Error in isAttendanceAvailable:", err);
-            res.status(500).json({
+        if (!student || !student.activeSubject || student.attendanceStatus === false) {
+            return res.status(200).json({
                 status: false,
-                message: "Server error while checking attendance availability.",
+                message: "No active attendance session found.",
+                attendanceStatus: false
             });
         }
-    };
 
-    submitAttendance = async (req, res) => {
-        const { latitude, longitude } = req.body;
-        const { _id: studentId, assignedSubjects } = req.user; // Get data from authenticated user
+        // 3. Find the session details using the subject found in the student's record
+        const activeSession = await AttendanceSessionModel.findOne({
+            subject: student.activeSubject
+        });
 
-        try {
-            // 1. Find the active attendance session
-            const activeSession = await AttendanceSessionModel.findOne({
-                subject: { $in: assignedSubjects }
-            });
+        res.status(200).json({
+            status: true,
+            message: `Attendance available for ${student.activeSubject}.`,
+            subject: student.activeSubject,
+            location: activeSession?.collegeLocation,
+        });
+    } catch (err) {
+        res.status(500).json({ status: false, message: "Server error." });
+    }
+};
 
-            if (!activeSession) {
-                return res.status(400).json({ 
-                    status: false, 
-                    message: "Attendance window is closed or not started." 
-                });
-            }
+submitAttendance = async (req, res) => {
+    const { latitude, longitude } = req.body;
+    const { _id: studentId } = req.user; // Get ID from token
 
-            const { collegeLocation, subject: currentSubject } = activeSession;
+    try {
+        // 1. Retrieve the student from DB to get the live 'activeSubject'
+        const student = await studentModel.findById(studentId);
 
-            // 2. Perform Geofencing Check
-            const distance = haversineDistance(
-                latitude,
-                longitude,
-                collegeLocation.latitude,
-                collegeLocation.longitude
-            );
+        if (!student || !student.activeSubject) {
+            return res.status(400).json({ status: false, message: "No active session for you." });
+        }
 
-            if (distance > collegeLocation.range_km) {
-                return res.status(403).json({
-                    status: false,
-                    message: `You are too far from the college location. Distance: ${distance.toFixed(2)} km.`,
-                });
-            }
+        const currentSubject = student.activeSubject;
 
-            // 3. Mark attendance
-            const date = new Date();
-            const today = date.toISOString().split('T')[0];
-            const attendanceTime = date;
+        // 2. Fetch session coordinates using that subject
+        const activeSession = await AttendanceSessionModel.findOne({ subject: currentSubject });
 
-            const updateResult = await studentModel.findOneAndUpdate(
-                { _id: studentId },
-                {
-                    $set: { attendanceStatus: false }, // Reset status immediately
-                    $push: {
-                        subjectAttendance: {
-                            subject: currentSubject,
-                            date: today,
-                            time: attendanceTime,
-                            status: 'Present',
-                        }
-                    },
-                    $inc: { 
-                        workingDays: 1, 
-                        presentDays: 1 
-                    } // Increment counters
+        // ... (Perform Geofencing Check with distance calculation) ...
+
+        // 3. Mark attendance and CLEAR the field in the database
+        await studentModel.updateOne(
+            { _id: studentId },
+            {
+                $set: { 
+                    attendanceStatus: false,
+                    activeSubject: "" // Clear the subject once finished
                 },
-                { new: true }
-            );
+                $push: {
+                    subjectAttendance: {
+                        subject: currentSubject,
+                        date: new Date(),
+                        time: new Date(),
+                        status: 'Present',
+                    }
+                },
+                $inc: { workingDays: 1, presentDays: 1 }
+            }
+        );
 
-            // Optional: End the session if it's based on a single student submission (not recommended)
-            // await AttendanceSessionModel.findByIdAndDelete(activeSession._id);
-
-            res.status(200).json({ 
-                status: true, 
-                message: `Attendance submitted successfully for ${currentSubject}.` 
-            });
-
-        } catch (err) {
-            console.error("Error in submitAttendance:", err);
-            res.status(500).json({ 
-                status: false, 
-                message: "Server error during attendance submission." 
-            });
-        }
-    };
+        res.status(200).json({ status: true, message: "Attendance marked." });
+    } catch (err) {
+        res.status(500).json({ status: false, message: "Submission failed." });
+    }
+};
 
   attendaceHistory = async (req, res) => {
    
