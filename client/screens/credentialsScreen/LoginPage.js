@@ -180,7 +180,7 @@ const LoginPage = () => {
 
           <View style={styles.titleContainer}>
             <Text style={styles.title}>Login</Text>
-            <Text style={styles.collegeTitle}>Nagarjuna College of IT</Text>
+            <Text style={styles.collegeTitle}>meroApp</Text>
           </View>
 
           <TextInput
